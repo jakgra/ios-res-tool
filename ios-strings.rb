@@ -153,21 +153,20 @@ def import_android(import_path)
       xml = File.read xml_path.to_s
       doc = REXML::Document.new(xml)
 
+      xml_formatter = REXML::Formatters::Default.new()
       doc.elements.each('resources/string') { |str|
         next if str.attributes['translatable'] == 'false' and $skip_untranslatable_strings
 
         key = str.attributes['name']
         # puts "string: #{key}"
 
-        until not str.has_elements?
-          str.each_element { |astr|
-            str = astr
-          }
-        end
+        out_str = ""
+        str.each { |child|
+          xml_formatter.write(child, out_str)
+        }
 
-        next if not str.text
         $strings_keys[key] = true
-        values[:strings][key] = import_android_string(str.text)
+        values[:strings][key] = import_android_string(out_str)
       }
 
       doc.elements.each('resources/string-array') { |arr|
